@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 
 
 int main(int argc, char* argv[]) {
@@ -35,7 +36,7 @@ int main(int argc, char* argv[]) {
     }
     else {
         printf("Parent is waiting for child process...\n");
-        wait();
+        wait(NULL);
         printf("parent processing is done\n");
     }
 
