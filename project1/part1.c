@@ -3,27 +3,28 @@
 #include <stdlib.h>
 #include <string.h>
 #define MAX_LINE 80 /* The maximum length command */
-int count = 0;
+int record = 0;
+char history[10][MAX_LINE];
 
 void displayHistory() {
     printf("Shell Command History: \n");
 
     int i;
     int j = 0;
-    int hisCount = count;
 
-    for(int i=0;i<10;i++) {
-        
+    for(int i=record-1;i>=0;i--) {
+        printf("%d ", i+1);
+        printf("%s\n",history[i]);
     }
 }
 
 int format(char inputBuffer[], char *args[], int *flag) {
     int length = 0;
     int first;
-    int history;
+    int hist;
 
     fgets(inputBuffer,MAX_LINE,stdin);
-    //inputBuffer = "\n";
+    //inputBuffer = "ls -l";
     //printf("%s\n", inputBuffer);
     length = strlen(inputBuffer);
 
@@ -52,6 +53,7 @@ int format(char inputBuffer[], char *args[], int *flag) {
                 for(int k=0;k<strlen(temp);k++) {
                     args[count][k] = temp[k];
                 }
+                args[count][i] = '\0';
                 ++count;
             }
             start = -1;
@@ -66,7 +68,7 @@ int format(char inputBuffer[], char *args[], int *flag) {
                 for(int k=0;k<strlen(temp);k++) {
                     args[count][k] = temp[k];
                 }
-
+                args[count][i] = '\0';
                 ++count;
             }
             
@@ -89,8 +91,10 @@ int format(char inputBuffer[], char *args[], int *flag) {
         return 1;
     }
 
+    //printf("%d\n",count);
+    int indicate = 0;
     if(strcmp(args[0],"history") == 0) {
-        if(count>0) {
+        if(record>0) {
             displayHistory();
         }
         else {
@@ -102,13 +106,128 @@ int format(char inputBuffer[], char *args[], int *flag) {
         if(strlen(args[0]) == 1) {
             return -1;
         }
-        int x = args[0][1]-'0';
-        int y =0;
+        else if(strlen(args[0]) == 3) {
+            //printf("2\n");
+            int ten = args[0][1] - '0';
+            int unit = args[0][2] - '0';
+            printf("%d, %d\n",ten,unit);
+            if(ten == 1 && unit == 0) {
+                //printf("3\n");
+                strcpy(inputBuffer,history[9]);
+                indicate = 1;
+            }
+            else {
+                //printf("4\n");
+                printf("No such command in history\n");
+                return -1;
+            }
+        }
+        else if(strlen(args[0]) == 2) {
+
+            int unit = args[0][1] - '0';
+            
+            if(unit == -15){ // !!
+            //printf("5\n");
+                strcpy(inputBuffer,history[0]);
+                indicate = 1;
+            }
+            else if(unit > 0 && unit <= 9) {
+                if(unit > record) {
+                    //printf("6\n");
+                    printf("No such command in history\n");
+                    return -1;
+                }
+                else{
+                    //printf("7\n");
+                    strcpy(inputBuffer,history[unit-1]);
+                    indicate = 1;
+                }
+            }
+            
+        }
         
     }
 
+    if(indicate == 0) {
+        for(int i=9;i>0;i--) {
+            strcpy(history[i],history[i-1]);
+        }
+        strcpy(history[0],inputBuffer);
+        record++;
+        if(record>10) {
+            record = 10;
+        }
+    }
+ 
+   
+    if(indicate == 1) {
+        //printf("Changing buffer %s",inputBuffer);
+        //printf("%lu\n",strlen(inputBuffer));
+        for(int i=count-1;i>=0;i--) {
+            free(args[i]);
+        }
 
+        start = -1;
+        count = 0;
+        length =strlen(inputBuffer);
 
+        for(int i=0;i<length;i++) {
+            if(inputBuffer[i] == ' ' || inputBuffer[i] == '\t') {
+                if(start != -1) {
+                    char temp[i-start+1];
+                    for(int j=start;j<i;j++) {
+                        temp[j-start] = inputBuffer[j];
+                    }
+                    args[count] = malloc(sizeof(temp));
+                    for(int k=0;k<strlen(temp);k++) {
+                        args[count][k] = temp[k];
+                    }
+                    args[count][i] = '\0';
+                    ++count;
+                }
+                start = -1;
+            }
+            else if (inputBuffer[i] == '\n' || inputBuffer[i] == '\0') {
+                if(start != -1) {
+                    char temp[i-start+1];
+                    for(int j=start;j<i;j++) {
+                        temp[j-start] = inputBuffer[j];
+                    }
+                    args[count] = malloc(sizeof(temp));
+                    for(int k=0;k<strlen(temp);k++) {
+                        args[count][k] = temp[k];
+                    }
+                    args[count][i] = '\0';
+
+                    ++count;
+                }
+
+                args[count] = NULL;
+            }
+            else {
+                if(start == -1) {
+                    start = i;
+                }
+
+                if(inputBuffer[i] == '&') {
+                    start = -1;
+                    *flag = 1;
+
+                }
+            }
+        }
+        args[count] = NULL;
+        if(args[0] == NULL) {
+            return 1;
+        }
+        //printf("%d\n",count);
+
+    }
+    //printf("args[]\n");
+    //for(int i=0;i<count;i++) {
+    //    printf("%s ",args[i]);
+    //}
+    //printf("\n");
 
     
     return 0;
@@ -134,6 +253,13 @@ int main(void) {
             }
 
             else if(pid == 0) {
+                //printf("In child process\n");
+                //int i=0;
+                //while(args[i] != NULL) {
+                //    printf("%s ",args[i]);
+                //    i++;
+                //}
+                //printf("\n");
                 if(execvp(args[0],args) == -1) {
                     printf("Error executing command\n");
                 }
