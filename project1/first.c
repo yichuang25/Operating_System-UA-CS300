@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
     pid = fork();
 
     if(pid == 0) {
-        printf("Child is processing ...\n");
+        //printf("Child is processing ...\n");
         printf("%d\n",k);
         while(k!=1) {
             if(k%2 == 0) {
@@ -32,12 +32,12 @@ int main(int argc, char* argv[]) {
             }
             printf("%d\n",k);
         }
-        printf("Child processing is done\n");
+        //printf("Child processing is done\n");
     }
     else {
-        printf("Parent is waiting for child process...\n");
+        //printf("Parent is waiting for child process...\n");
         wait(NULL);
-        printf("parent processing is done\n");
+        //printf("parent processing is done\n");
     }
 
     return 0;
