@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -250,14 +251,14 @@ int main(void) {
     int flag;
     int should_run = 1; /* flag to determine when to exit program */
     pid_t pid;
-    int result;
+    bool result;
     while (should_run) {
         flag = 0;
         printf("osh>");
         fflush(stdout);
-
+        result = true;
         int index = format(command, args, &flag);
-        //printf("%d\n",index);
+        printf("index is %d\n",index);
         if(index == 0 || index == 2) {
             pid = fork();
             if(pid < 0) {
@@ -273,16 +274,20 @@ int main(void) {
                 //    i++;
                 //}
                 //printf("\n");
-                result = execvp(args[0],args);
                 //printf("%d\n",result);
-                if(result == -1) {
+                if(execvp(args[0],args) == -1) {
                     printf("Error executing command\n");
-
+                    result = false;
                 }
             }
 
             else {
-                if(index == 0 && result!=-1) {
+                
+                if(flag == 0) {
+                    wait(NULL);
+                }
+                printf("Result is %d\n",result);
+                if(index == 0 && result==true) {
                     for(int i=9;i>0;i--) {
                         strcpy(history[i],history[i-1]);
                     }
@@ -292,10 +297,8 @@ int main(void) {
                         record = 10;
                     }
                     free(request);
+                    printf("Record is %d\n",record);
                     
-                }
-                if(flag == 0) {
-                    wait(NULL);
                 }
             }
 
