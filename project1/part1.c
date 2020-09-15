@@ -7,11 +7,11 @@
 #define MAX_LINE 80 /* The maximum length command */
 int record = 0;
 char history[10][MAX_LINE];
+char *request;
 
 void displayHistory() {
     printf("Shell Command History: \n");
 
-    int i;
     int j = 0;
 
     for(int i=record-1;i>=0;i--) {
@@ -32,13 +32,13 @@ int format(char inputBuffer[], char *args[], int *flag) {
 
     if (strcmp(inputBuffer,"exit\n") == 0) {
         printf("Goodbye\n");
-        return 2;
+        return 3;
     }
 
     
     if(length == 0) {
         printf("Error, command cannot read\n");
-        exit(1);
+        return 1;
     }
 
     int start = -1;
@@ -100,19 +100,20 @@ int format(char inputBuffer[], char *args[], int *flag) {
             displayHistory();
         }
         else {
-            printf("\nNo Command In History\n");
+            printf("\nNo command in history\n");
         }
-        return -1;
+        return 1;
     }
     else if(args[0][0] == '!') {
         if(strlen(args[0]) == 1) {
-            return -1;
+            printf("No such command in history\n");
+            return 1;
         }
         else if(strlen(args[0]) == 3) {
             //printf("2\n");
             int ten = args[0][1] - '0';
             int unit = args[0][2] - '0';
-            printf("%d, %d\n",ten,unit);
+            //printf("%d, %d\n",ten,unit);
             if(ten == 1 && unit == 0) {
                 //printf("3\n");
                 strcpy(inputBuffer,history[9]);
@@ -121,7 +122,7 @@ int format(char inputBuffer[], char *args[], int *flag) {
             else {
                 //printf("4\n");
                 printf("No such command in history\n");
-                return -1;
+                return 1;
             }
         }
         else if(strlen(args[0]) == 2) {
@@ -130,6 +131,10 @@ int format(char inputBuffer[], char *args[], int *flag) {
             
             if(unit == -15){ // !!
             //printf("5\n");
+                if(record == 0) {
+                    printf("No command in history\n");
+                    return 1;
+                }
                 strcpy(inputBuffer,history[0]);
                 indicate = 1;
             }
@@ -137,7 +142,7 @@ int format(char inputBuffer[], char *args[], int *flag) {
                 if(unit > record) {
                     //printf("6\n");
                     printf("No such command in history\n");
-                    return -1;
+                    return 1;
                 }
                 else{
                     //printf("7\n");
@@ -150,16 +155,16 @@ int format(char inputBuffer[], char *args[], int *flag) {
         
     }
 
-    if(indicate == 0) {
-        for(int i=9;i>0;i--) {
-            strcpy(history[i],history[i-1]);
-        }
-        strcpy(history[0],inputBuffer);
-        record++;
-        if(record>10) {
-            record = 10;
-        }
-    }
+    //if(indicate == 0) {
+    //    for(int i=9;i>0;i--) {
+    //        strcpy(history[i],history[i-1]);
+    //    }
+    //    strcpy(history[0],inputBuffer);
+    //    record++;
+    //    if(record>10) {
+    //        record = 10;
+    //    }
+    //}
  
    
     if(indicate == 1) {
@@ -223,14 +228,17 @@ int format(char inputBuffer[], char *args[], int *flag) {
             return 1;
         }
         //printf("%d\n",count);
-
+        return 2;
     }
     //printf("args[]\n");
     //for(int i=0;i<count;i++) {
     //    printf("%s ",args[i]);
     //}
     //printf("\n");
-
+    request = malloc(sizeof(length));
+    for(int i=0;i<length;i++) {
+        request[i] = inputBuffer[i];
+    }
     
     return 0;
 }
@@ -242,12 +250,15 @@ int main(void) {
     int flag;
     int should_run = 1; /* flag to determine when to exit program */
     pid_t pid;
+    int result;
     while (should_run) {
         flag = 0;
         printf("osh>");
         fflush(stdout);
+
         int index = format(command, args, &flag);
-        if(index == 0) {
+        //printf("%d\n",index);
+        if(index == 0 || index == 2) {
             pid = fork();
             if(pid < 0) {
                 printf("Fork Failed\n");
@@ -262,19 +273,34 @@ int main(void) {
                 //    i++;
                 //}
                 //printf("\n");
-                if(execvp(args[0],args) == -1) {
+                result = execvp(args[0],args);
+                //printf("%d\n",result);
+                if(result == -1) {
                     printf("Error executing command\n");
+
                 }
             }
 
             else {
+                if(index == 0 && result!=-1) {
+                    for(int i=9;i>0;i--) {
+                        strcpy(history[i],history[i-1]);
+                    }
+                    strcpy(history[0],request);
+                    record++;
+                    if(record>10) {
+                        record = 10;
+                    }
+                    free(request);
+                    
+                }
                 if(flag == 0) {
                     wait(NULL);
                 }
             }
 
         }
-        else if (index == 2) {
+        else if (index == 3) {
             should_run = 0;
         }
         

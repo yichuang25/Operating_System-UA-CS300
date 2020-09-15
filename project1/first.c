@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
 
     if(pid == 0) {
         //printf("Child is processing ...\n");
-        printf("%d\n",k);
+        //printf("%d\n",k);
         while(k!=1) {
             if(k%2 == 0) {
                 k = k/2;
