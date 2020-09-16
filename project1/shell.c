@@ -1,20 +1,24 @@
+/*
+*   Yichen Huang
+*   CWID:11906882
+*/
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #define MAX_LINE 80 /* The maximum length command */
 int record = 0;
 char history[10][MAX_LINE];
-char *request;
 
 void displayHistory() {
     printf("Shell Command History: \n");
 
+    int i;
     int j = 0;
-
+    
     for(int i=record-1;i>=0;i--) {
         printf("%d ", i+1);
         printf("%s\n",history[i]);
@@ -27,7 +31,7 @@ int format(char inputBuffer[], char *args[], int *flag) {
     int hist;
 
     fgets(inputBuffer,MAX_LINE,stdin);
-    //inputBuffer = "ls -l";
+    //inputBuffer = "ls &";
     //printf("%s\n", inputBuffer);
     length = strlen(inputBuffer);
 
@@ -101,7 +105,7 @@ int format(char inputBuffer[], char *args[], int *flag) {
             displayHistory();
         }
         else {
-            printf("\nNo command in history\n");
+            printf("No Command In History\n");
         }
         return 1;
     }
@@ -156,16 +160,17 @@ int format(char inputBuffer[], char *args[], int *flag) {
         
     }
 
-    //if(indicate == 0) {
-    //    for(int i=9;i>0;i--) {
-    //        strcpy(history[i],history[i-1]);
-    //    }
-    //    strcpy(history[0],inputBuffer);
-    //    record++;
-    //    if(record>10) {
-    //        record = 10;
-    //    }
-    //}
+    if(indicate == 0) {
+        //printf("Add to history...\n");
+        for(int i=9;i>0;i--) {
+            strcpy(history[i],history[i-1]);
+        }
+        strcpy(history[0],inputBuffer);
+        record++;
+        if(record>10) {
+            record = 10;
+        }
+    }
  
    
     if(indicate == 1) {
@@ -229,17 +234,14 @@ int format(char inputBuffer[], char *args[], int *flag) {
             return 1;
         }
         //printf("%d\n",count);
-        return 2;
+
     }
     //printf("args[]\n");
     //for(int i=0;i<count;i++) {
     //    printf("%s ",args[i]);
     //}
     //printf("\n");
-    request = malloc(sizeof(length));
-    for(int i=0;i<length;i++) {
-        request[i] = inputBuffer[i];
-    }
+
     
     return 0;
 }
@@ -251,16 +253,12 @@ int main(void) {
     int flag;
     int should_run = 1; /* flag to determine when to exit program */
     pid_t pid;
-    bool result;
     while (should_run) {
         flag = 0;
         printf("osh>");
         fflush(stdout);
-        result = true;
-        int index = -3; 
-        index = format(command, args, &flag);
-        printf("index is %d\n",index);
-        if(index == 0 || index == 2) {
+        int index = format(command, args, &flag);
+        if(index == 0) {
             pid = fork();
 
             if(pid < 0) {
@@ -269,44 +267,28 @@ int main(void) {
             }
 
             else if(pid == 0) {
-                printf("Child is processing ...\n");
+                //printf("Child processing...\n");
                 if(execvp(args[0],args) == -1) {
-                    index = -3;
                     printf("Error executing command\n");
-                    result = false;
                     exit(0);
+                    
                 }
-                printf("The child processing is done\n");
+                //printf("Child processing done...\n");
             }
 
             else {
-                
+                //printf("Parent processing starting\n");
                 if(flag == 0) {
-                    printf("Parent is waiting for child process...\n");
+                    //printf("Waiting for child finish...\n");
                     wait(NULL);
                 }
-                printf("Result is %d\n",result);
-                if(index == 0 && result==true) {
-                    printf("Adding to history...\n");
-                    for(int i=9;i>0;i--) {
-                        strcpy(history[i],history[i-1]);
-                    }
-                    strcpy(history[0],request);
-                    record++;
-                    if(record>10) {
-                        record = 10;
-                    }
-                    free(request);
-                    printf("Record is %d\n",record);
-                    
-                }
+                //printf("Parent processing done\n");
             }
 
         }
         else if (index == 3) {
             should_run = 0;
         }
-        printf("parent processing is done\n");
         
     }
     return 0;

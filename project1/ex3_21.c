@@ -1,8 +1,12 @@
+/*
+*   Yichen Huang
+*   CWID:11906882
+*/
+
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-
 
 int main(int argc, char* argv[]) {
     
@@ -19,10 +23,9 @@ int main(int argc, char* argv[]) {
     }
 
     pid = fork();
-
     if(pid == 0) {
         //printf("Child is processing ...\n");
-        //printf("%d\n",k);
+        printf("%d ",k);
         while(k!=1) {
             if(k%2 == 0) {
                 k = k/2;
@@ -30,8 +33,9 @@ int main(int argc, char* argv[]) {
             else {
                 k = 3*k + 1;
             }
-            printf("%d\n",k);
+            printf("%d ",k);
         }
+        printf("\n");
         //printf("Child processing is done\n");
     }
     else {
