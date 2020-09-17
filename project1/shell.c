@@ -168,24 +168,24 @@ int format(char inputBuffer[], char *args[], int *flag) {
             indicate = 1;
             free(integer);
         }
-        //printf("%s\n",inputBuffer);
+        printf("Running command: %s\n",inputBuffer);
     
 
         
     }
 
-    if(indicate == 0) {
-        //printf("Add to history...\n");
-        for(int i=9;i>0;i--) {
-            strcpy(history[i],history[i-1]);
-        }
-        strcpy(history[0],inputBuffer);
-        record++;
-        if(record>10) {
-            record = 10;
-        }
-        number++;
+    
+    //printf("Add to history...\n");
+    for(int i=9;i>0;i--) {
+        strcpy(history[i],history[i-1]);
     }
+    strcpy(history[0],inputBuffer);
+    record++;
+    if(record>10) {
+        record = 10;
+    }
+    number++;
+    
  
    
     if(indicate == 1) {
