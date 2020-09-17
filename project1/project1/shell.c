@@ -11,18 +11,25 @@
 #include <sys/wait.h>
 #define MAX_LINE 80 /* The maximum length command */
 int record = 0;
+int number = 0;
 char history[10][MAX_LINE];
 
 void displayHistory() {
     printf("Shell Command History: \n");
 
-    int i;
-    int j = 0;
-    
-    for(int i=record-1;i>=0;i--) {
-        printf("%d ", i+1);
-        printf("%s\n",history[i]);
+    if(number <=10) {
+        for(int i=0;i<record;i++) {
+            printf("%d ", record-i);
+            printf("%s\n",history[i]);
+        }
     }
+    else {
+        for(int i=0;i<record;i++) {
+            printf("%d ", number-i);
+            printf("%s\n",history[i]);
+        }
+    }
+    
 }
 
 int format(char inputBuffer[], char *args[], int *flag) {
@@ -111,52 +118,59 @@ int format(char inputBuffer[], char *args[], int *flag) {
     }
     else if(args[0][0] == '!') {
         if(strlen(args[0]) == 1) {
-            printf("No such command in history\n");
+            printf("Error! Please enter an integer after !\n");
             return 1;
         }
-        else if(strlen(args[0]) == 3) {
-            //printf("2\n");
-            int ten = args[0][1] - '0';
-            int unit = args[0][2] - '0';
-            //printf("%d, %d\n",ten,unit);
-            if(ten == 1 && unit == 0) {
-                //printf("3\n");
-                strcpy(inputBuffer,history[9]);
-                indicate = 1;
-            }
-            else {
-                //printf("4\n");
-                printf("No such command in history\n");
+        if(strcmp(args[0],"!!")==0) {
+            if(record == 0) {
+                printf("No command in history\n");
                 return 1;
             }
+            strcpy(inputBuffer,history[0]);
+            indicate = 1;
         }
-        else if(strlen(args[0]) == 2) {
-
-            int unit = args[0][1] - '0';
-            
-            if(unit == -15){ // !!
-            //printf("5\n");
-                if(record == 0) {
-                    printf("No command in history\n");
+        else {
+            for(int i=1;i<strlen(args[0]);i++) {
+                if(args[0][i] < '0' || args[0][i] >'9') {
+                    printf("Error, Please enter an integer after !\n");
                     return 1;
                 }
-                strcpy(inputBuffer,history[0]);
-                indicate = 1;
             }
-            else if(unit > 0 && unit <= 9) {
-                if(unit > record) {
-                    //printf("6\n");
+            char *integer = malloc(sizeof(strlen(args[0])-1));
+            for(int i=1;i<strlen(args[0]);i++) {
+                integer[i-1] = args[0][i];
+            }
+            int index = atoi(integer);
+            if(index <= 0) {
+                printf("Error, Please enter an positive integer after !\n");
+                return 1;
+            }
+            if(number <= 10) {
+                if(index <= 0 || index>number) {
                     printf("No such command in history\n");
                     return 1;
                 }
-                else{
-                    //printf("7\n");
-                    strcpy(inputBuffer,history[unit-1]);
-                    indicate = 1;
+                else {
+                    strcpy(inputBuffer,history[record - index]);
                 }
             }
+            else {
+                if(index<=number-10 || index>number) {
+                    printf("No such command in history\n");
+                    return 1;
+                }
+                else {
+                    strcpy(inputBuffer,history[number-index]);
+                }
+
+            }
             
+            indicate = 1;
+            free(integer);
         }
+        //printf("%s\n",inputBuffer);
+    
+
         
     }
 
@@ -170,6 +184,7 @@ int format(char inputBuffer[], char *args[], int *flag) {
         if(record>10) {
             record = 10;
         }
+        number++;
     }
  
    
