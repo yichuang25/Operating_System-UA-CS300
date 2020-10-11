@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <stdbool.h>
+#include <sys/types.h>
 
 #define TIME_QUANTUM 1
 #define BUFFER_SIZE 1024
@@ -153,7 +154,7 @@ void printCDA(CDA *cda) {
 
 
 void startProcess(process *p) {
-    //printf("New process: %d, %d, %d\n",p->arrival_time,p->priority,p->cpu_time);
+    printf("New process: %d, %d, %d\n",p->arrival_time,p->priority,p->cpu_time);
     pid_t child = fork();
     if(child == 0) {
         char **command = malloc(sizeof(char *));
@@ -167,7 +168,7 @@ void startProcess(process *p) {
 }
 
 void suspendProcess (process *p) {
-    //printf("Stop process: %d, %d, %d\n",p->arrival_time,p->priority,p->cpu_time);
+    printf("Stop process: %d, %d, %d\n",p->arrival_time,p->priority,p->cpu_time);
     kill(p->pid,SIGTSTP);
     waitpid(p->pid,NULL,WUNTRACED);
     if(p->priority < 3)  {
@@ -177,12 +178,12 @@ void suspendProcess (process *p) {
 }
 
 void restartProcess(process *p) {
-    //printf("Restart process: %d, %d, %d\n",p->arrival_time,p->priority,p->cpu_time);
+    printf("Restart process: %d, %d, %d\n",p->arrival_time,p->priority,p->cpu_time);
     kill(p->pid,SIGCONT);
 }
 
 void terminateProcess(process *p) {
-    //printf("Terminate process: %d, %d, %d\n",p->arrival_time,p->priority,p->cpu_time);
+    printf("Terminate process: %d, %d, %d\n",p->arrival_time,p->priority,p->cpu_time);
     kill(p->pid,SIGINT);
     waitpid(p->pid,NULL,WUNTRACED);
 }
@@ -259,7 +260,7 @@ int main (int argc, char *argv[]) {
     int left = dispatch_queue->size;
     while(left > 0) {
         
-        //printf("Second %d\n",curr_time);
+        printf("Second %d\n",curr_time);
         CDA *curr_process = get_current_process(dispatch_queue,curr_time);
         //printf("%d\n",curr_process->size);
         number_process = number_process + curr_process->size;
@@ -268,12 +269,13 @@ int main (int argc, char *argv[]) {
             copyProcess(curr_process->arr[i],&cur);
             insertCDA_back(rq[cur.priority],&cur);
         }
-
-        //for(int i=0;i<4;i++) {
-        //    printf("\npriority queue: %d\n",i);
-        //    printCDA(rq[i]);
-        //    printf("\n");
-        //}
+        printf("Number of process: %d\n",number_process);
+        printf("Left process: %d\n",left);
+        for(int i=0;i<4;i++) {
+            printf("\npriority queue: %d\n",i);
+            printCDA(rq[i]);
+            printf("\n");
+        }
 
         if(currently_running && currently_running->cpu_time == 0) {
             terminateProcess(currently_running);
@@ -392,6 +394,6 @@ int main (int argc, char *argv[]) {
     //free(dispatch_queue->arr);
     fclose(dispatch_file);
 
-
+    wait(NULL);
     return 0;
 }
