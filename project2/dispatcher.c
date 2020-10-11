@@ -91,12 +91,12 @@ void insertCDA_back(CDA *cda,process* np) {
             cda->sorted = false;
         }
     }
-
-    cda->arr[last].arrival_time = np->arrival_time;
-    cda->arr[last].priority = np->priority;
-    cda->arr[last].cpu_time = np->cpu_time;
-    cda->arr[last].pid = np->pid;
-    cda->arr[last].state = np->state;
+    copyProcess(*np,&cda->arr[last]);
+    //cda->arr[last].arrival_time = np->arrival_time;
+    //cda->arr[last].priority = np->priority;
+    //cda->arr[last].cpu_time = np->cpu_time;
+    //cda->arr[last].pid = np->pid;
+    //cda->arr[last].state = np->state;
     cda->size++;
 
 }
@@ -118,13 +118,15 @@ void halfCapacity(CDA *cda) {
 }
 
 void removeCDAfront(CDA *cda) {
+    //printf("size: %d, Cap: %d\n",cda->size,cda->cap);
     if(cda->size <= 0) {
         return;
     }
     int newfront = (cda->front + 1) % cda->cap;
     cda->front = newfront;
     cda->size--;
-    if(cda->cap>1 && (cda->size)/cda->cap < 0.25) {
+    if(cda->cap>1 && (cda->size)/(double)cda->cap < 0.25) {
+        //printf("Shrink\n");
         halfCapacity(cda);
     }
 }
@@ -226,8 +228,8 @@ int main (int argc, char *argv[]) {
 
     while(fgets(line,BUFFER_SIZE,dispatch_file)) {
         int arrival, priority, cpu_time;
-        int count;
-        count = sscanf(line,"%d,%d,%d",&arrival,&priority,&cpu_time);
+        
+        sscanf(line,"%d,%d,%d",&arrival,&priority,&cpu_time);
         process *proc = newProcess(arrival,priority,cpu_time);
         if(priority<0 || priority >3) {
             printf("Invalid priority!\n");
@@ -235,6 +237,7 @@ int main (int argc, char *argv[]) {
         else {
             insertCDA_back(dispatch_queue,proc);
         }
+        
     }
     if (dispatch_queue->sorted == false) {
         insertionSort(dispatch_queue);
@@ -255,9 +258,7 @@ int main (int argc, char *argv[]) {
     int sys_running = 0;
     int left = dispatch_queue->size;
     while(left > 0) {
-        if(curr_time == 7) {
-            printf("1\n");
-        }
+        
         //printf("Second %d\n",curr_time);
         CDA *curr_process = get_current_process(dispatch_queue,curr_time);
         //printf("%d\n",curr_process->size);
@@ -329,12 +330,16 @@ int main (int argc, char *argv[]) {
         else if(rq[2]->size > 0) { // priority 2
             if(currently_running) {
                 suspendProcess(currently_running);
+                //printf("current_running: %d, %d, %d\n",currently_running->arrival_time,currently_running->priority,currently_running->cpu_time);
                 insertCDA_back(rq[currently_running->priority],currently_running);
+                //printCDA(rq[2]);
+                //printf("current_running: %d, %d, %d\n",currently_running->arrival_time,currently_running->priority,currently_running->cpu_time);
                 //free(currently_running);
             }
             process *ptwo = malloc(sizeof(process));
             copyProcess(rq[2]->arr[rq[2]->front],ptwo);
             removeCDAfront(rq[2]);
+            //printCDA(rq[2]);
             if(ptwo->state == ready) {
                 startProcess(ptwo);
             }
@@ -386,6 +391,7 @@ int main (int argc, char *argv[]) {
     }
     //free(dispatch_queue->arr);
     fclose(dispatch_file);
+
 
     return 0;
 }
