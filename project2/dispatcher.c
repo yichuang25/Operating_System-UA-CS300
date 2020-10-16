@@ -23,8 +23,8 @@ typedef struct process {
 
 
 typedef struct cda {
-    bool flag;
-    bool sorted;
+    bool flag; // identify queue
+    //bool sorted;
     int size;
     int cap;
     int front;
@@ -84,14 +84,14 @@ void insertCDA_back(CDA *cda,process* np) {
     
     int last = (cda->front + cda->size)%cda->cap;
 
-    if(cda->size == 0) {
-        cda->sorted = true;
-    }
-    else {
-        if(cda->arr[(cda->front + cda->size - 1)%cda->cap].arrival_time > np->arrival_time && cda->flag == false) {
-            cda->sorted = false;
-        }
-    }
+    //if(cda->size == 0) {
+    //    cda->sorted = true;
+    //}
+    //else {
+    //    if(cda->arr[(cda->front + cda->size - 1)%cda->cap].arrival_time > np->arrival_time && cda->flag == false) {
+    //        cda->sorted = false;
+    //    }
+    //}
     copyProcess(*np,&cda->arr[last]);
     //cda->arr[last].arrival_time = np->arrival_time;
     //cda->arr[last].priority = np->priority;
@@ -132,19 +132,19 @@ void removeCDAfront(CDA *cda) {
     }
 }
 
-void insertionSort(CDA *cda) {
-    int front = cda->front;
-    int capacity = cda->cap;
-    for(int i=1;i<cda->size;i++) {
-        for(int j=i-1;j>=0 && cda->arr[(front+j+1)%capacity].arrival_time < cda->arr[(front+j)%capacity].arrival_time;j--) {
-            process temp;
-            copyProcess(cda->arr[(front+j)%capacity],&temp);
-            copyProcess(cda->arr[(front+j+1)%capacity],&cda->arr[(front+j)%capacity]);
-            copyProcess(temp,&cda->arr[(front+j+1)%capacity]);
-        }
-    }
-    cda->sorted = true;
-}
+//void insertionSort(CDA *cda) {
+//    int front = cda->front;
+//    int capacity = cda->cap;
+//    for(int i=1;i<cda->size;i++) {
+//        for(int j=i-1;j>=0 && cda->arr[(front+j+1)%capacity].arrival_time < cda->arr[(front+j)%capacity].arrival_time;j--) {
+//            process temp;
+//            copyProcess(cda->arr[(front+j)%capacity],&temp);
+//            copyProcess(cda->arr[(front+j+1)%capacity],&cda->arr[(front+j)%capacity]);
+//            copyProcess(temp,&cda->arr[(front+j+1)%capacity]);
+//        }
+//    }
+//    cda->sorted = true;
+//}
 
 void printCDA(CDA *cda) {
     for(int i=0;i<cda->size;i++) {
@@ -176,7 +176,7 @@ void suspendProcess (process *p) {
     kill(p->pid,SIGTSTP);
     waitpid(p->pid,NULL,WUNTRACED);
     if(p->priority < 3)  {
-        p->priority++;
+        p->priority++; // insert to next priority
     }
     p->state = waiting;
 }
@@ -192,7 +192,7 @@ void terminateProcess(process *p) {
     waitpid(p->pid,NULL,WUNTRACED);
 }
 
-CDA *get_current_process(CDA *dq, int arrival) {
+CDA *get_current_process(CDA *dq, int arrival) { // get the process arrived at this time
     CDA *list = newCDA();
     list->flag = true;
     for(int i=0;i<dq->size;i++) {
@@ -232,25 +232,25 @@ int main (int argc, char *argv[]) {
 
 
     while(fgets(line,BUFFER_SIZE,dispatch_file)) {
-        int arrival, priority, cpu_time;
+        int arrival, priority, cpu_time; 
         
-        sscanf(line,"%d,%d,%d",&arrival,&priority,&cpu_time);
+        sscanf(line,"%d,%d,%d",&arrival,&priority,&cpu_time); // get the docuemnt info line by line
         process *proc = newProcess(arrival,priority,cpu_time);
         if(priority<0 || priority >3) {
             printf("Invalid priority!\n");
         }
         else {
-            insertCDA_back(dispatch_queue,proc);
+            insertCDA_back(dispatch_queue,proc); // add the process to dispatcher queue
         }
         
     }
-    if (dispatch_queue->sorted == false) {
-        insertionSort(dispatch_queue);
-    }
+    //if (dispatch_queue->sorted == false) {
+    //    insertionSort(dispatch_queue);
+    //}
     //printCDA(dispatch_queue);
 
-    int curr_time = 0;
-    int number_process = 0;
+    int curr_time = 0; // time stamp
+    int number_process = 0; // process number
 
     CDA **rq = malloc(sizeof(CDA *) * 4); //create 4 priority queue
     
@@ -260,8 +260,8 @@ int main (int argc, char *argv[]) {
     }
 
     process *currently_running = NULL;
-    int sys_running = 0;
-    int left = dispatch_queue->size;
+    int sys_running = 0; // flag of system running
+    int left = dispatch_queue->size; // size of the dispatcher list
     while(left > 0) {
         
         //printf("Second %d\n",curr_time);
@@ -281,7 +281,7 @@ int main (int argc, char *argv[]) {
         //    printf("\n");
         //}
 
-        if(currently_running && currently_running->cpu_time == 0) {
+        if(currently_running && currently_running->cpu_time == 0) { // check cputime for current process
             terminateProcess(currently_running);
             left--;
             if(sys_running) {
@@ -293,7 +293,7 @@ int main (int argc, char *argv[]) {
             
         }
 
-        if(rq[0]->size > 0 && !sys_running) { //system queue
+        if(rq[0]->size > 0 && !sys_running) { //system queue: first come, first serve
             if(currently_running) {
                 suspendProcess(currently_running);
                 insertCDA_back(rq[currently_running->priority],currently_running);
@@ -310,7 +310,7 @@ int main (int argc, char *argv[]) {
             currently_running = sys_pro;
             sys_running = 1;
         }
-        else if(rq[1]->size > 0) { //priority 1
+        else if(rq[1]->size > 0) { //priority 1 round robin
             if(currently_running) {
                 suspendProcess(currently_running);
                 insertCDA_back(rq[currently_running->priority],currently_running);
@@ -384,7 +384,7 @@ int main (int argc, char *argv[]) {
         }
 
         if(currently_running) {
-            currently_running->cpu_time = currently_running->cpu_time - TIME_QUANTUM;
+            currently_running->cpu_time = currently_running->cpu_time - TIME_QUANTUM; //minus time quantum
         }
 
         curr_time++;
@@ -392,6 +392,7 @@ int main (int argc, char *argv[]) {
         sleep(TIME_QUANTUM);
     }
 
+    // Free the pointers
     for(int i=0;i<4;i++) {
         free(rq[i]->arr);
     }
