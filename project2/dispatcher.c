@@ -1,3 +1,9 @@
+/*
+*   CS-300-001
+*   Last name: Huang
+*   First name: Yichen
+*   CWID:11906882
+*/
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
