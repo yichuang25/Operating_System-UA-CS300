@@ -316,7 +316,7 @@ int main (int argc, char *argv[]) {
             currently_running = sys_pro;
             sys_running = 1;
         }
-        else if(rq[1]->size > 0) { //priority 1 round robin
+        else if(rq[1]->size > 0 && !sys_running) { //priority 1 round robin
             if(currently_running) {
                 suspendProcess(currently_running);
                 insertCDA_back(rq[currently_running->priority],currently_running);
@@ -339,7 +339,7 @@ int main (int argc, char *argv[]) {
             sys_running = 0;
             
         }
-        else if(rq[2]->size > 0) { // priority 2
+        else if(rq[2]->size > 0 && !sys_running) { // priority 2
             if(currently_running) {
                 suspendProcess(currently_running);
                 //printf("current_running: %d, %d, %d\n",currently_running->arrival_time,currently_running->priority,currently_running->cpu_time);
@@ -365,7 +365,7 @@ int main (int argc, char *argv[]) {
             sys_running = 0;
             
         }
-        else if(rq[3]->size > 0) { //last priority
+        else if(rq[3]->size > 0 && !sys_running) { //last priority
             if(currently_running) {
                 suspendProcess(currently_running);
                 insertCDA_back(rq[currently_running->priority],currently_running);
