@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
             }
 
             if(frameNumber == -1) { //page fault
-                printf("Page fault ");
+                //printf("Page fault ");
                 readFromstore(pageNumber);
 
                 frameNumber = LRU();
@@ -192,7 +192,7 @@ int main(int argc, char *argv[]) {
         //    printf("%d %d \n",TLB_Page[i],TLB_Frame[i]);
         //}
         //printf("\n");
-        printf("Frame Number: %d ",frameNumber);
+        //printf("Frame Number: %d ",frameNumber);
         Memory_Counter[frameNumber] = addressCounter;
         int value = physicalMemory[frameNumber][offset];
         printf("Virtual address: %d Physical address: %d Value: %d\n", logical_address, (frameNumber << 8) | offset, value);
