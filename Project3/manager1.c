@@ -1,3 +1,11 @@
+/*
+*
+*   Yichen Huang
+*   CS-300-001
+*   11906882
+*
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
